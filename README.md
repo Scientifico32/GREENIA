@@ -1,4 +1,4 @@
-# GREENIA
+# GREENIA 
 
 🌍 Renewable Energy Forecasting and Strategic Planning 🌍
 
