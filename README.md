@@ -1,7 +1,7 @@
 # GREENIA
 
-🌍 Renewable Energy Forecasting and Strategic Planning 🌍
-
+**🌍 Renewable Energy Forecasting and Strategic Planning 🌍
+**
 📊 Welcome to the Renewable Energy Forecasting and Strategic Planning project! This repository contains the full implementation of a deep learning model designed to forecast energy production based on meteorological data. The project also includes strategic planning for optimizing the placement of renewable energy sources (RES) across Greece 📊
 
 🗂️ Project Structure
