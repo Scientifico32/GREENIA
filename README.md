@@ -6,46 +6,46 @@ Welcome to the Renewable Energy Forecasting and Strategic Planning project! This
 🗂️ Project Structure
 
 /project-directory/
-│
-├── /data/
-│   ├── raw_data/
-│   │   ├── AGCHIALOS_16665.xlsx
-│   │   ├── AKTIO_16643.xlsx
-│   │   ├── ALEXANDROUPOLI_16627.xlsx
-│   │   └── ... (other Excel files)
-│   └── processed_data/
-│       └── final_df_resampled_cleaned.csv
-│
-├── /src/
-│   ├── data_preprocessing.py
-│   ├── model_definition.py
-│   ├── model_training.py
-│   ├── optimization.py
-│   ├── shap_analysis.py
-│   ├── strategic_planning.py
-│   └── utils.py
-│
-├── /models/
-│   ├── timemix_with_attention_model.pth
-│   ├── scaler_X.pkl
-│   ├── scaler_y.pkl
-│   ├── shap_explainer.pkl
-│   └── shap_values.pkl
-│
-├── /notebooks/
-│   └── analysis_notebook.ipynb
-│
-├── /outputs/
-│   ├── training_log.csv
-│   └── strategic_plan.txt
-│
-├── README.md
-├── requirements.txt
-└── .gitignore
+  │
+  ├── /data/
+  │   ├── raw_data/
+  │   │   ├── AGCHIALOS_16665.xlsx
+  │   │   ├── AKTIO_16643.xlsx
+  │   │   ├── ALEXANDROUPOLI_16627.xlsx
+  │   │   └── ... (other Excel files)
+  │   └── processed_data/
+  │       └── final_df_resampled_cleaned.csv
+  │
+  ├── /src/
+  │   ├── data_preprocessing.py
+  │   ├── model_definition.py
+  │   ├── model_training.py
+  │   ├── optimization.py
+  │   ├── shap_analysis.py
+  │   ├── strategic_planning.py
+  │   └── utils.py
+  │
+  ├── /models/
+  │   ├── timemix_with_attention_model.pth
+  │   ├── scaler_X.pkl
+  │   ├── scaler_y.pkl
+  │   ├── shap_explainer.pkl
+  │   └── shap_values.pkl
+  │
+  ├── /notebooks/
+  │   └── analysis_notebook.ipynb
+  │
+  ├── /outputs/
+  │   ├── training_log.csv
+  │   └── strategic_plan.txt
+  │
+  ├── README.md
+  ├── requirements.txt
+  └── .gitignore
 
 📁 /data/
-raw_data/: Contains the raw meteorological data from various locations in Greece.
-processed_data/: Stores the processed and cleaned data ready for modeling.
+- raw_data/: Contains the raw meteorological data from various locations in Greece.
+- processed_data/: Stores the processed and cleaned data ready for modeling.
 
 🧠 /src/
 - data_preprocessing.py: Scripts for data cleaning, feature engineering, and preprocessing.
