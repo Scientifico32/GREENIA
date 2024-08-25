@@ -1,14 +1,14 @@
 # GREENIA
 
-**🌍 Renewable Energy Forecasting and Strategic Planning 🌍
-**
+🌍 Renewable Energy Forecasting and Strategic Planning 🌍
+
 📊 Welcome to the Renewable Energy Forecasting and Strategic Planning project! This repository contains the full implementation of a deep learning model designed to forecast energy production based on meteorological data. The project also includes strategic planning for optimizing the placement of renewable energy sources (RES) across Greece 📊
 
 🗂️ Project Structure
 
 /project-directory/
-  │
-  ├── /data/
+  
+  - /data/
   │   ├── raw_data/
   │   │   ├── AGCHIALOS_16665.xlsx
   │   │   ├── AKTIO_16643.xlsx
@@ -17,7 +17,7 @@
   │   └── processed_data/
   │       └── final_df_resampled_cleaned.csv
   │
-  ├── /src/
+  - /src/
   │   ├── data_preprocessing.py
   │   ├── model_definition.py
   │   ├── model_training.py
@@ -26,23 +26,23 @@
   │   ├── strategic_planning.py
   │   └── utils.py
   │
-  ├── /models/
+  - /models/
   │   ├── timemix_with_attention_model.pth
   │   ├── scaler_X.pkl
   │   ├── scaler_y.pkl
   │   ├── shap_explainer.pkl
   │   └── shap_values.pkl
   │
-  ├── /notebooks/
+  - /notebooks/
   │   └── analysis_notebook.ipynb
   │
-  ├── /outputs/
+  - /outputs/
   │   ├── training_log.csv
   │   └── strategic_plan.txt
   │
-  ├── README.md
-  ├── requirements.txt
-  └── .gitignore
+  - README.md
+  - requirements.txt
+  - .gitignore
 
 📁 /data/
 - raw_data/: Contains the raw meteorological data from various locations in Greece.
