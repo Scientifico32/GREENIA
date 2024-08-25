@@ -1,0 +1,10 @@
+openai
+torch
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+shap
+deap
+tensorflow-probability
