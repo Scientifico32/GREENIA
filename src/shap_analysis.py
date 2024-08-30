@@ -1,39 +1,45 @@
 import shap
-import torch
-import numpy as np
-import pickle
-import os
 
-from model_training import model, X_test_tensor, scaler_X, scaler_y
-from data_preprocessing import merged_df
-
+# Function to reshape 2D inputs back to 3D for the model
 def model_predict_3d(flattened_data):
-    reshaped_data = flattened_data.reshape(-1, 10, 50 // 10)
+    reshaped_data = flattened_data.reshape(-1, seq_len, feature_dim // seq_len)
     return model(torch.tensor(reshaped_data, dtype=torch.float32)).detach().numpy()
 
-X_test_flat = X_test_tensor.numpy().reshape(-1, 10 * (50 // 10))
-explainer = shap.KernelExplainer(model_predict_3d, X_test_flat[:30])
-shap_values = explainer.shap_values(X_test_flat)
+# Flatten the 3D test data to 2D for SHAP
+X_test_flat = X_test_tensor.numpy().reshape(-1, seq_len * (feature_dim // seq_len))
 
-vals = np.abs(shap_values).mean(0)
+# Initialize the SHAP KernelExplainer with the flat data and the wrapper function
+explainer = shap.KernelExplainer(model_predict_3d, X_test_flat[:30])  # Background data
+
+# Calculate SHAP values with the flattened test data
+shap_values = explainer.shap_values(X_test_flat)  # Evaluate on a subset
+
+# Ensure that we are working with the correct SHAP values format
+if isinstance(shap_values, list):
+    shap_values_array = shap_values[0]
+else:
+    shap_values_array = shap_values
+
+# Get the raw values and average them
+vals = np.abs(shap_values_array).mean(0)
+
+# Feature names corresponding to the original data
 feature_names = merged_df.drop(columns=['Energy (MWh)', 'Date']).columns
+
+# Truncate the `vals` to match the length of `feature_names`
 vals_truncated = vals[:len(feature_names)]
 
+# Create the SHAP values DataFrame with aligned lengths
 shap_table = pd.DataFrame({
     'Features': feature_names,
     'Shap value': list(vals_truncated)
 })
-shap_table = shap_table.sort_values(by=["Shap value"], ascending=False).round(3)
 
-save_dir = '/content/drive/MyDrive/TimeMixWithAttention'
-explainer_save_path = os.path.join(save_dir, 'shap_explainer.pkl')
-shap_values_save_path = os.path.join(save_dir, 'shap_values.pkl')
+# Sort the table by SHAP value
+shap_table = shap_table.sort_values(by=["Shap value"], ascending=False)
 
-with open(explainer_save_path, 'wb') as f:
-    pickle.dump(explainer, f)
-with open(shap_values_save_path, 'wb') as f:
-    pickle.dump(shap_values, f)
+# Round the SHAP values for better readability
+shap_table = shap_table.round(3)
 
-print(f"SHAP explainer saved to {explainer_save_path}")
-print(f"SHAP values saved to {shap_values_save_path}")
+# Print or use shap_table as needed
 print(shap_table)
