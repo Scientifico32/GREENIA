@@ -8,15 +8,15 @@ from model_definition import SimpleGRU, SimpleLSTM  # Import models directly
 
 # Load the models (Adjust paths and models as necessary)
 model_gru = SimpleGRU(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
-model_gru.load_state_dict(torch.load('/content/drive/MyDrive/PhD/Main model/gru_model.pth'))
+model_gru.load_state_dict(torch.load('/models/gru_model.pth'))
 model_gru.eval()
 
 model_lstm = SimpleLSTM(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
-model_lstm.load_state_dict(torch.load('/content/drive/MyDrive/PhD/Main model/lstm_model.pth'))
+model_lstm.load_state_dict(torch.load('/models/lstm_model.pth'))
 model_lstm.eval()
 
-xgb_model = joblib.load('/content/drive/MyDrive/PhD/Main model/xgboost_model.pkl')
-scaler_y = joblib.load('/content/drive/MyDrive/PhD/Main model/scaler_y.pkl')
+xgb_model = joblib.load('/models/xgboost_model.pkl')
+scaler_y = joblib.load('/models/scaler_y.pkl')
 
 # 4. Particle Swarm Optimization (PSO)
 def pso(objective_function, bounds, num_particles=10, max_iter=100):
