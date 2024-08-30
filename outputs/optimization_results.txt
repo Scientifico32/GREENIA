@@ -1,0 +1,116 @@
+Optimizing for Day 1...
+Best Individual for Day 1 (Original Scale): [  0.           3.00020979   0.          96.           1.
+   0.           4.           0.          -6.6         15.
+ 239.99115468  11.00127063  23.          28.49615055  94.
+ 189.96414925  52.          38.          19.         184.89525592
+  48.           0.          12.19946809 100.         161.44534312
+   2.          14.          -3.8        100.         240.02068854
+  54.          16.           4.50309233  94.           0.
+  21.2016217   14.         360.          97.           0.
+  -1.6         83.44822054   0.           6.04173866  23.
+  -5.4         22.        ]
+Forecasted Energy Production for Day 1 (Original Scale, before optimization): 546.1199826639892
+Forecasted Energy Production for Day 1 (Original Scale, after PSO optimization): 1339.6595029461387
+Improvement for Day 1: 793.5395202821495
+Percentage Improvement for Day 1: 145.30%
+
+Optimizing for Day 2...
+Best Individual for Day 2 (Original Scale): [360.           0.           0.          96.           1.
+ 360.           4.           0.          37.6         15.
+  87.24590583  67.          22.99916483  35.4         50.00016618
+ 360.          52.          13.88974203  19.           0.
+  48.           0.          13.56205301 100.          20.01675383
+  33.          14.          15.47956705 100.           0.
+  54.           0.         -16.7         11.           0.
+ -10.          14.         360.          97.          24.
+  -1.6         98.           0.           2.           0.
+  -5.4         22.        ]
+Forecasted Energy Production for Day 2 (Original Scale, before optimization): 563.0399949836732
+Forecasted Energy Production for Day 2 (Original Scale, after PSO optimization): 1343.420233962536
+Improvement for Day 2: 780.3802389788628
+Percentage Improvement for Day 2: 138.60%
+
+Optimizing for Day 3...
+Best Individual for Day 3 (Original Scale): [ 3.49999569e+02  3.00007146e+00  0.00000000e+00  9.60000000e+01
+  1.00000000e+00  3.58559207e+02  4.00000000e+00  5.99906248e+00
+  1.90189465e+01  1.00000000e+02  1.86706535e+01  8.15106828e+00
+  2.30000000e+01  4.56584574e+00  2.10000000e+01  0.00000000e+00
+  5.19675447e+01  1.50339940e+01  6.75357292e+01  0.00000000e+00
+  1.00000000e+00  2.20000000e+01  3.46641979e-01  7.18696608e+01
+  3.60000000e+02  2.00000000e+00  0.00000000e+00  2.14119777e-01
+  7.28459004e+01  1.03062988e+01  3.17664881e+01  0.00000000e+00
+ -1.67000000e+01  4.84857376e+01  1.97769222e+00 -1.00000000e+01
+  3.50345471e+01  3.60000000e+02  4.18451775e+01  6.57038632e+00
+ -1.60000000e+00  1.70000000e+01  0.00000000e+00  5.00115779e+00
+  1.00824785e+01  3.54000000e+01  1.00000000e+02]
+Forecasted Energy Production for Day 3 (Original Scale, before optimization): 593.2500100797415
+Forecasted Energy Production for Day 3 (Original Scale, after PSO optimization): 1186.4373863422873
+Improvement for Day 3: 593.1873762625457
+Percentage Improvement for Day 3: 99.99%
+
+Optimizing for Day 4...
+Best Individual for Day 4 (Original Scale): [360.           0.           0.          96.           1.
+ 280.04356592  90.          22.          -6.6         15.
+   0.          67.           0.44567875  25.79095047  94.
+ 360.          52.          38.          97.           0.
+  48.          22.          36.4        100.         128.16800422
+   2.           0.           9.73943154 100.          40.68293679
+   0.           0.          18.42216625  13.3149851    0.
+  28.90122627 100.         360.           3.           2.60707529
+  12.80106487  17.           0.          33.99538528  23.
+  -5.4         22.        ]
+Forecasted Energy Production for Day 4 (Original Scale, before optimization): 456.9200081700087
+Forecasted Energy Production for Day 4 (Original Scale, after PSO optimization): 1302.4738115227224
+Improvement for Day 4: 845.5538033527137
+Percentage Improvement for Day 4: 185.06%
+
+Optimizing for Day 5...
+Best Individual for Day 5 (Original Scale): [ 3.60000000e+02  3.05265609e+00  0.00000000e+00  9.60000000e+01
+  1.00000000e+00  2.13558045e+02  9.00000000e+01  0.00000000e+00
+ -6.60000000e+00  4.30000106e+01  1.08966728e+02  1.36279604e+01
+  2.30000000e+01  3.53946605e+01  9.40000000e+01  2.93539691e+02
+  4.00000000e+00  3.79890375e+01  1.90000000e+01  0.00000000e+00
+  2.31001140e+01  3.47470239e+00 -1.80000000e+00  1.80000000e+01
+  0.00000000e+00  2.47376358e+00  1.83648520e-01 -3.80000000e+00
+  1.50000000e+01  1.61184395e+02  5.40000000e+01  1.60000000e+01
+ -1.67000000e+01  1.90422175e+01  0.00000000e+00 -1.00000000e+01
+  7.29972383e+01  0.00000000e+00  3.00000000e+00  0.00000000e+00
+  2.17244189e+01  3.26748699e+01  2.69748389e+00  5.00000316e+00
+  8.49321998e-01 -5.40000000e+00  2.20165125e+01]
+Forecasted Energy Production for Day 5 (Original Scale, before optimization): 569.329987820983
+Forecasted Energy Production for Day 5 (Original Scale, after PSO optimization): 1319.3613380610946
+Improvement for Day 5: 750.0313502401116
+Percentage Improvement for Day 5: 131.74%
+
+Optimizing for Day 6...
+Best Individual for Day 6 (Original Scale): [360.           0.           0.          96.           1.
+  10.00932888   4.          22.          -6.6         15.00210593
+ 128.35799809   8.27444829  23.          -0.6         92.64564595
+   0.           4.          17.18365854  97.         360.
+   8.32623576  22.          26.46633819  59.06281392 360.
+  33.           0.          12.73126797 100.           0.
+   0.          16.          -1.54824815  94.          15.66903662
+  34.2         20.2218747   10.61469833   3.           7.1753028
+  -1.6         17.           0.           5.01937424   0.
+   0.59988856 100.        ]
+Forecasted Energy Production for Day 6 (Original Scale, before optimization): 527.5799826747179
+Forecasted Energy Production for Day 6 (Original Scale, after PSO optimization): 1215.5352242922784
+Improvement for Day 6: 687.9552416175604
+Percentage Improvement for Day 6: 130.40%
+
+Optimizing for Day 7...
+Best Individual for Day 7 (Original Scale): [ 10.00005793   3.00000376   0.          96.           1.
+   0.          89.99648613   0.          -6.6         15.
+ 239.99423679   2.          22.90430039  -0.6         92.30980896
+  94.28636808  52.         -10.          97.         360.
+   1.           0.58953151  -1.8         18.          55.49037167
+  31.42656205   0.          -3.8         37.00289928   1.34483593
+   5.26611064   0.           2.39847801  15.17963552   0.
+  34.02050822  14.           0.          97.           0.
+  -1.6         98.           0.           6.00000441   0.
+  -5.4         22.        ]
+Forecasted Energy Production for Day 7 (Original Scale, before optimization): 617.4200048953295
+Forecasted Energy Production for Day 7 (Original Scale, after PSO optimization): 1347.7936476337911
+Improvement for Day 7: 730.3736427384616
+Percentage Improvement for Day 7: 118.29%
+
