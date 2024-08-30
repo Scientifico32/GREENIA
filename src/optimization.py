@@ -6,10 +6,24 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from model_definition import SimpleGRU, SimpleLSTM  # Import models directly
 
-def pso(objective_function, bounds, num_particles=50, max_iter=1000):
+# Load the models (Adjust paths and models as necessary)
+model_gru = SimpleGRU(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
+model_gru.load_state_dict(torch.load('/content/drive/MyDrive/PhD/Main model/gru_model.pth'))
+model_gru.eval()
+
+model_lstm = SimpleLSTM(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
+model_lstm.load_state_dict(torch.load('/content/drive/MyDrive/PhD/Main model/lstm_model.pth'))
+model_lstm.eval()
+
+xgb_model = joblib.load('/content/drive/MyDrive/PhD/Main model/xgboost_model.pkl')
+scaler_y = joblib.load('/content/drive/MyDrive/PhD/Main model/scaler_y.pkl')
+
+# 4. Particle Swarm Optimization (PSO)
+def pso(objective_function, bounds, num_particles=10, max_iter=100):
     dim = len(bounds)
     swarm = []
 
+    # Initialize the swarm
     for _ in range(num_particles):
         particle = {
             'position': np.array([random.uniform(b[0], b[1]) for b in bounds]),
@@ -35,6 +49,7 @@ def pso(objective_function, bounds, num_particles=50, max_iter=1000):
                 global_best_value = value
                 global_best_position = particle['position'].copy()
 
+        # Update the velocity and position of each particle
         for particle in swarm:
             inertia = 0.5
             cognitive = 1.5 * np.random.rand(dim) * (particle['best_position'] - particle['position'])
@@ -45,36 +60,38 @@ def pso(objective_function, bounds, num_particles=50, max_iter=1000):
 
     return global_best_position
 
-def run_optimization(n_days, X_test_tensor, y_test_tensor, gru_path, lstm_path, xgb_path, scaler_y_path, feature_dim=50, seq_len=10):
-    # Load models directly in the function
-    model_gru = SimpleGRU(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
-    model_gru.load_state_dict(torch.load(gru_path))
-    model_gru.eval()
+# 5. Running the Optimization and Collecting Results
+n_days = 7
+bounds = [(0, 1) for _ in range(feature_dim)]
 
-    model_lstm = SimpleLSTM(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
-    model_lstm.load_state_dict(torch.load(lstm_path))
-    model_lstm.eval()
+best_individuals = []  # Initialize a list to store best individuals for each day
+actual_values = []
+forecasted_values = []
+optimized_values = []
+improvements = []
 
-    xgb_model = joblib.load(xgb_path)
-    scaler_y = joblib.load(scaler_y_path)
-
-    bounds = [(0, 1) for _ in range(feature_dim)]
-    best_individuals = []
-    actual_values = []
-    forecasted_values = []
-    optimized_values = []
-    improvements = []
+# Open a file to save the outputs
+with open('optimization_results.txt', 'w') as file:
 
     for day in range(n_days):
         print(f"Optimizing for Day {day + 1}...")
+        file.write(f"Optimizing for Day {day + 1}...\n")
 
         def objective_function(individual):
             input_tensor = torch.tensor(np.array(individual).reshape(1, seq_len, feature_dim // seq_len), dtype=torch.float32)
+            
+            # Get predictions from the GRU and LSTM models
             prediction_gru = model_gru(input_tensor).item()
             prediction_lstm = model_lstm(input_tensor).item()
+
+            # Flatten the input for XGBoost (2D instead of 3D tensor)
             input_flat = input_tensor.view(1, -1).numpy()
             prediction_xgb = xgb_model.predict(input_flat)[0]
+
+            # Ensemble method: Average the predictions
             ensemble_prediction = (prediction_gru + prediction_lstm + prediction_xgb) / 3
+            
+            # We negate the ensemble prediction because PSO is designed to minimize the objective function
             return -ensemble_prediction
 
         best_individual = pso(objective_function, bounds, num_particles=30, max_iter=1000)
@@ -86,13 +103,18 @@ def run_optimization(n_days, X_test_tensor, y_test_tensor, gru_path, lstm_path, 
         else:
             best_individual_padded = best_individual
 
-        best_individual_original_space = best_individual_padded[:X_test_tensor.shape[1]]
+        best_individual_original_space = best_individual_padded[:X.shape[1]]
+
         best_individual_orig = scaler_X.inverse_transform(np.array(best_individual_original_space).reshape(1, -1)).flatten()
+
+        # Store the best individual in the list
         best_individuals.append(best_individual_orig)
 
         input_tensor = torch.tensor(np.array(best_individual_padded).reshape(1, seq_len, feature_dim // seq_len), dtype=torch.float32)
         forecasted_value_optimized = model_gru(input_tensor).item()
+
         forecasted_value_optimized_orig = scaler_y.inverse_transform([[forecasted_value_optimized]]).flatten()[0]
+
         forecasted_value_orig = scaler_y.inverse_transform([[y_test_tensor[day].item()]]).flatten()[0]
 
         improvement = forecasted_value_optimized_orig - forecasted_value_orig
@@ -103,25 +125,36 @@ def run_optimization(n_days, X_test_tensor, y_test_tensor, gru_path, lstm_path, 
         optimized_values.append(forecasted_value_optimized_orig)
         improvements.append(improvement)
 
-        print(f"Best Individual for Day {day + 1} (Original Scale): {best_individual_orig}")
-        print(f"Forecasted Energy Production for Day {day + 1} (Original Scale, before optimization): {forecasted_value_orig}")
-        print(f"Forecasted Energy Production for Day {day + 1} (Original Scale, after PSO optimization): {forecasted_value_optimized_orig}")
-        print(f"Improvement for Day {day + 1}: {improvement}")
-        print(f"Percentage Improvement for Day {day + 1}: {percentage_improvement:.2f}%")
+        # Write the results to the file
+        file.write(f"Best Individual for Day {day + 1} (Original Scale): {best_individual_orig}\n")
+        file.write(f"Forecasted Energy Production for Day {day + 1} (Original Scale, before optimization): {forecasted_value_orig}\n")
+        file.write(f"Forecasted Energy Production for Day {day + 1} (Original Scale, after PSO optimization): {forecasted_value_optimized_orig}\n")
+        file.write(f"Improvement for Day {day + 1}: {improvement}\n")
+        file.write(f"Percentage Improvement for Day {day + 1}: {percentage_improvement:.2f}%\n")
+        file.write("\n")
 
-    plot_results(n_days, actual_values, optimized_values, improvements)
+# 6. Plotting Results
+days = np.arange(1, n_days + 1)
 
-def plot_results(n_days, actual_values, optimized_values, improvements):
-    days = np.arange(1, n_days + 1)
+plt.figure(figsize=(12, 8))
 
-    plt.figure(figsize=(12, 8))
-    plt.plot(days, actual_values, label='Actual Forecasted Values (Before Optimization)', marker='o', linestyle='--')
-    plt.plot(days, optimized_values, label='Forecasted Values (After Optimization)', marker='o', linestyle='--')
-    plt.bar(days, improvements, label='Improvement', alpha=0.3)
-    plt.xlabel('Day')
-    plt.ylabel('Energy Production (MWh)')
-    plt.title('Energy Production: Actual vs Optimized')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+# Plot the forecasted values
+plt.plot(days, actual_values, label='Actual Forecasted Values (Before Optimization)', marker='o', linestyle='--')
+plt.plot(days, optimized_values, label='Forecasted Values (After Optimization)', marker='o', linestyle='--')
+
+# Plot the improvements
+plt.bar(days, improvements, label='Improvement', alpha=0.3)
+
+plt.xlabel('Day')
+plt.ylabel('Energy Production (MWh)')
+plt.title('Energy Production: Actual vs Optimized')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Save the plot to a file
+plt.savefig('optimization_plot.png')
+
+# Closing the file (not strictly necessary with the 'with' statement, but good practice)
+file.close()
 
