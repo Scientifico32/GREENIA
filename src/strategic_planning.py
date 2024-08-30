@@ -42,7 +42,7 @@ for day, best_individual in enumerate(best_individuals, start=1):
     strategic_recommendations.append(f"Day {day} - Strategic Insights:\n" + explanation + "\n")
 
 strategic_plan = "\n".join(strategic_recommendations)
-save_dir = '/content/drive/MyDrive/TimeMixWithAttention'
+save_dir = '...'
 strategic_plan_path = os.path.join(save_dir, 'strategic_plan.txt')
 
 with open(strategic_plan_path, 'w') as f:
