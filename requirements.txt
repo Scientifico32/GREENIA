@@ -8,3 +8,4 @@ seaborn
 shap
 deap
 tensorflow-probability
+joblib
