@@ -1,95 +1,122 @@
-import torch
 import torch.optim as optim
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
 import matplotlib.pyplot as plt
-import os
-import pickle
-from model_definition import TimeMixWithAttention
+import xgboost as xgb
 
-# Assuming merged_df has been processed and saved
-merged_df = pd.read_csv('/content/drive/MyDrive/TimeMixWithAttention/processed_data/merged_df.csv')
+# Helper function to train the GRU and LSTM models
+def train_model(model, X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, num_epochs=1000, learning_rate=0.1, patience=100, min_epochs=300):
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=20, min_lr=1e-6)
 
-# Prepare data for training
-X = merged_df.drop(columns=['Energy (MWh)', 'Date']).values
-y = merged_df['Energy (MWh)'].values
+    best_val_loss = float('inf')
+    early_stopping_counter = 0
 
-scaler_X = MinMaxScaler()
-X_scaled = scaler_X.fit_transform(X)
-scaler_y = MinMaxScaler()
-y_scaled = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
+    for epoch in range(num_epochs):
+        model.train()
+        optimizer.zero_grad()
 
-X_padded = np.pad(X_scaled, ((0, 0), (0, 3)), 'constant')
-X_train, X_test, y_train, y_test = train_test_split(X_padded, y_scaled, test_size=0.2, random_state=42)
+        # Forward pass
+        outputs = model(X_train_tensor)
+        loss = criterion(outputs.squeeze(), y_train_tensor)
 
-X_train_tensor = torch.tensor(X_train, dtype=torch.float32).view(-1, 10, 50 // 10)
-X_test_tensor = torch.tensor(X_test, dtype=torch.float32).view(-1, 10, 50 // 10)
-y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
-y_test_tensor = torch.tensor(y_test, dtype=torch.float32)
+        # Backward and optimize
+        loss.backward()
+        optimizer.step()
 
-input_dim = X_train_tensor.shape[2]
-model = TimeMixWithAttention(input_dim, hidden_dim=256, output_dim=1, seq_len=10)
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0008)
+        # Validation step
+        model.eval()
+        with torch.no_grad():
+            val_outputs = model(X_val_tensor).squeeze()
+            val_loss = criterion(val_outputs, y_val_tensor)
 
-training_losses = []
+        # Step the scheduler
+        scheduler.step(val_loss)
 
-for epoch in range(2000):
-    model.train()
-    optimizer.zero_grad()
-    outputs = model(X_train_tensor)
-    loss = criterion(outputs.squeeze(), y_train_tensor)
-    loss.backward()
-    optimizer.step()
-    training_losses.append(loss.item())
-    if (epoch + 1) % 10 == 0:
-        print(f'Epoch [{epoch + 1}/2000], Loss: {loss.item():.4f}')
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            early_stopping_counter = 0
+        else:
+            early_stopping_counter += 1
 
-model.eval()
-with torch.no_grad():
-    test_outputs = model(X_test_tensor).squeeze()
-    test_loss = criterion(test_outputs, y_test_tensor)
-    print(f'Test Loss: {test_loss.item():.4f}')
+        if (epoch + 1) >= min_epochs and early_stopping_counter >= patience:
+            print(f'Early stopping at epoch {epoch + 1}')
+            break
 
-    y_test_orig = scaler_y.inverse_transform(y_test_tensor.numpy().reshape(-1, 1)).flatten()
-    test_outputs_orig = scaler_y.inverse_transform(test_outputs.numpy().reshape(-1, 1)).flatten()
+        if (epoch + 1) % 1 == 0:
+            print(f'Epoch [{epoch + 1}/{num_epochs}], Train Loss: {loss.item():.4f}, Val Loss: {val_loss.item():.4f}, LR: {optimizer.param_groups[0]["lr"]:.6f}')
 
-    mae = mean_absolute_error(y_test_orig, test_outputs_orig)
-    rmse = np.sqrt(mean_squared_error(y_test_orig, test_outputs_orig))
-    mape = mean_absolute_percentage_error(y_test_orig, test_outputs_orig)
+    return model
 
-    print(f"MAE: {mae}")
-    print(f"RMSE: {rmse}")
-    print(f"MAPE: {mape}%")
+# Training XGBoost model
+def train_xgb(X_train_xgb, y_train_xgb, X_val_xgb, y_val_xgb):
+    xgb_model = xgb.XGBRegressor(
+        objective='reg:squarederror',
+        learning_rate=0.01,
+        n_estimators=1000,
+        max_depth=6,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        early_stopping_rounds=20
+    )
 
+    xgb_model.fit(
+        X_train_xgb, y_train_xgb,
+        eval_set=[(X_val_xgb, y_val_xgb)],
+        verbose=True
+    )
+    return xgb_model
+
+# Model 1: Train XGBoost
+xgb_model = train_xgb(X_train_xgb, y_train_xgb, X_val_xgb, y_val_xgb)
+pred1 = torch.tensor(xgb_model.predict(X_val_xgb))
+
+# Model 2: Train Simple GRU
+model2 = SimpleGRU(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
+model2 = train_model(model2, X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor)
+
+# Model 3: Train Simple LSTM
+model3 = SimpleLSTM(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
+model3 = train_model(model3, X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor)
+
+# Model Evaluation and Ensemble
+def evaluate_models(model2, model3, pred1, X_val_tensor, y_val_tensor, scaler_y):
+    # Switch to evaluation mode for GRU and LSTM models
+    model2.eval()
+    model3.eval()
+
+    with torch.no_grad():
+        pred2 = model2(X_val_tensor).squeeze()
+        pred3 = model3(X_val_tensor).squeeze()
+
+    # Simple Averaging of the predictions from XGBoost, GRU, and LSTM
+    ensemble_pred = (pred1 + pred2 + pred3) / 3
+
+    # Inverse transform the ensemble predictions to the original scale
+    ensemble_pred_orig = scaler_y.inverse_transform(ensemble_pred.numpy().reshape(-1, 1)).flatten()
+
+    # Get the actual values
+    actual_values_orig = scaler_y.inverse_transform(y_val_tensor.numpy().reshape(-1, 1)).flatten()
+
+    # Calculate evaluation metrics
+    mae = mean_absolute_error(actual_values_orig, ensemble_pred_orig)
+    rmse = np.sqrt(mean_squared_error(actual_values_orig, ensemble_pred_orig))
+    mape = mean_absolute_percentage_error(actual_values_orig, ensemble_pred_orig)
+
+    print(f"Ensemble MAE: {mae}")
+    print(f"Ensemble RMSE: {rmse}")
+    print(f"Ensemble MAPE: {mape}%")
+
+    # Plot the ensemble forecasted values vs the actual values
     plt.figure(figsize=(10, 6))
-    plt.plot(y_test_orig, label='Actual Values', marker='o', color='green')
-    plt.plot(test_outputs_orig, label='Forecasted Values', marker='o', color='blue')
-    plt.title('Forecast vs Actual Values')
+    plt.plot(range(len(actual_values_orig)), actual_values_orig, label='Actual Values', marker='o', color='green')
+    plt.plot(range(len(ensemble_pred_orig)), ensemble_pred_orig, label='Ensemble Forecasted Values', marker='o', color='blue')
+    plt.title('Ensemble Forecast vs Actual Values')
     plt.xlabel('Samples')
     plt.ylabel('Energy Production')
     plt.legend()
     plt.show()
 
-# Save model, scalers, and training log
-save_dir = '/content/drive/MyDrive/TimeMixWithAttention'
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
+# Usage
+evaluate_models(model2, model3, pred1, X_val_tensor, y_val_tensor, scaler_y)
 
-model_save_path = os.path.join(save_dir, 'timemix_with_attention_model.pth')
-torch.save(model.state_dict(), model_save_path)
-
-scaler_X_path = os.path.join(save_dir, 'scaler_X.pkl')
-scaler_y_path = os.path.join(save_dir, 'scaler_y.pkl')
-with open(scaler_X_path, 'wb') as f:
-    pickle.dump(scaler_X, f)
-with open(scaler_y_path, 'wb') as f:
-    pickle.dump(scaler_y, f)
-
-log_save_path = os.path.join(save_dir, 'training_log.csv')
-with open(log_save_path, mode='w', newline='') as file:
-    writer = csv.DictWriter(file, fieldnames=["epoch", "loss"])
-    writer.writeheader()
-    for epoch, loss in enumerate(training_losses):
-        writer.writerow({'epoch': epoch, 'loss': loss})
