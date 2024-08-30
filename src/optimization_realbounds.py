@@ -35,17 +35,6 @@ min_values = X.min(axis=0)  # Minimum values for each feature
 max_values = X.max(axis=0)  # Maximum values for each feature
 bounds = [(min_val, max_val) for min_val, max_val in zip(min_values, max_values)]
 
-# Load the models (Adjust paths and models as necessary)
-model_gru = SimpleGRU(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
-model_gru.load_state_dict(torch.load('/models/gru_model.pth'))
-model_gru.eval()
-
-model_lstm = SimpleLSTM(input_dim=5, hidden_dim=128, output_dim=1, seq_len=10)
-model_lstm.load_state_dict(torch.load('/models/lstm_model.pth'))
-model_lstm.eval()
-
-xgb_model = joblib.load('/models/xgboost_model.pkl')
-scaler_y = joblib.load('/models/scaler_y.pkl')
 
 # Particle Swarm Optimization (PSO)
 def pso(objective_function, bounds, num_particles=10, max_iter=100):
@@ -106,11 +95,17 @@ with open('optimization_results.txt', 'w') as file:
         file.write(f"Optimizing for Day {day + 1}...\n")
 
         def objective_function(individual):
-            input_tensor = torch.tensor(np.array(individual).reshape(1, seq_len, feature_dim // seq_len), dtype=torch.float32)
-            
+            # Pad or truncate the individual to match the required feature dimension
+            if len(individual) < feature_dim:
+                individual_padded = np.pad(individual, (0, feature_dim - len(individual)), 'constant')
+            else:
+                individual_padded = individual[:feature_dim]
+
+            input_tensor = torch.tensor(individual_padded.reshape(1, seq_len, feature_dim // seq_len), dtype=torch.float32)
+
             # Get predictions from the GRU and LSTM models
-            prediction_gru = model_gru(input_tensor).item()
-            prediction_lstm = model_lstm(input_tensor).item()
+            prediction_gru = model2(input_tensor).item()
+            prediction_lstm = model3(input_tensor).item()
 
             # Flatten the input for XGBoost (2D instead of 3D tensor)
             input_flat = input_tensor.view(1, -1).numpy()
@@ -118,27 +113,18 @@ with open('optimization_results.txt', 'w') as file:
 
             # Ensemble method: Average the predictions
             ensemble_prediction = (prediction_gru + prediction_lstm + prediction_xgb) / 3
-            
+
             # We negate the ensemble prediction because PSO is designed to minimize the objective function
             return -ensemble_prediction
 
         best_individual = pso(objective_function, bounds, num_particles=30, max_iter=1000)
 
-        if len(best_individual) < 50:
-            best_individual_padded = np.pad(best_individual, (0, 50 - len(best_individual)), 'constant')
-        elif len(best_individual) > 50:
-            best_individual_padded = best_individual[:50]
-        else:
-            best_individual_padded = best_individual
-
-        best_individual_original_space = best_individual_padded[:X.shape[1]]
-
-        best_individual_orig = scaler_X.inverse_transform(np.array(best_individual_original_space).reshape(1, -1)).flatten()
+        best_individual_orig = scaler_X.inverse_transform(np.array(best_individual).reshape(1, -1)).flatten()
 
         # Store the best individual in the list
         best_individuals.append(best_individual_orig)
 
-        input_tensor = torch.tensor(np.array(best_individual_padded).reshape(1, seq_len, feature_dim // seq_len), dtype=torch.float32)
+        input_tensor = torch.tensor(np.array(best_individual).reshape(1, seq_len, feature_dim // seq_len), dtype=torch.float32)
         forecasted_value_optimized = model_gru(input_tensor).item()
 
         forecasted_value_optimized_orig = scaler_y.inverse_transform([[forecasted_value_optimized]]).flatten()[0]
@@ -185,3 +171,4 @@ plt.savefig('optimization_plot.png')
 
 # Closing the file (not strictly necessary with the 'with' statement, but good practice)
 file.close()
+
