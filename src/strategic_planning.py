@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 # Load saved SHAP values and feature names
-shap_table = pd.read_csv('/content/drive/MyDrive/TimeMixWithAttention/shap_table.csv')
-best_individuals = np.load('/content/drive/MyDrive/TimeMixWithAttention/best_individuals.npy', allow_pickle=True)
+shap_table = pd.read_csv('....')
+best_individuals = np.load('....', allow_pickle=True)
 
 client = openai.Client(api_key="your-openai-api-key")
 
