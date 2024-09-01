@@ -3,12 +3,12 @@ import torch
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 
-def data_preprocessing(merged_df):
-    # Feature and target extraction
+def preprocess_data(merged_df, seq_len=10):
+    # Drop the 'Energy (MWh)' and 'Date' column and convert the rest to a NumPy array
     X = merged_df.drop(columns=['Energy (MWh)', 'Date']).values
     y = merged_df['Energy (MWh)'].values
 
-    # Scaling the features and the target variable
+    # Scale the features and the target variable
     scaler_X = MinMaxScaler()
     X_scaled = scaler_X.fit_transform(X)
 
@@ -16,27 +16,25 @@ def data_preprocessing(merged_df):
     y_scaled = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
 
     # Pad X to 50 features for divisibility by sequence length of 10
-    X_padded = np.pad(X_scaled, ((0, 0), (0, 3)), 'constant')
+    feature_dim = 50  # Adjust this as needed
+    X_padded = np.pad(X_scaled, ((0, 0), (0, feature_dim - X_scaled.shape[1])), 'constant')
 
-    # Split the data into training and validation sets
-    X_train, X_val, y_train, y_val = train_test_split(X_padded, y_scaled, test_size=0.2, random_state=42)
+    # Determine the split index (e.g., 80% for training and 20% for testing)
+    split_index = int(0.8 * len(X_padded))
 
-    # Convert the data to PyTorch tensors for the GRU and LSTM models
-    X_train_tensor = torch.tensor(X_train, dtype=torch.float32).view(-1, 10, 5)
-    X_val_tensor = torch.tensor(X_val, dtype=torch.float32).view(-1, 10, 5)
+    # Split the data chronologically
+    X_train, X_test = X_padded[:split_index], X_padded[split_index:]
+    y_train, y_test = y_scaled[:split_index], y_scaled[split_index:]
+
+    # Convert the data to PyTorch tensors
+    X_train_tensor = torch.tensor(X_train, dtype=torch.float32).view(-1, seq_len, feature_dim // seq_len)
+    X_test_tensor = torch.tensor(X_test, dtype=torch.float32).view(-1, seq_len, feature_dim // seq_len)
     y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
-    y_val_tensor = torch.tensor(y_val, dtype=torch.float32)
+    y_test_tensor = torch.tensor(y_test, dtype=torch.float32)
 
-    # Flatten the 3D tensor to 2D for XGBoost
-    X_train_xgb = X_train_tensor.view(X_train_tensor.shape[0], -1).numpy()
-    X_val_xgb = X_val_tensor.view(X_val_tensor.shape[0], -1).numpy()
-    y_train_xgb = y_train_tensor.numpy()
-    y_val_xgb = y_val_tensor.numpy()
+    return X_train_tensor, X_test_tensor, y_train_tensor, y_test_tensor, scaler_y
 
-    return (X_train_tensor, X_val_tensor, y_train_tensor, y_val_tensor,
-            X_train_xgb, X_val_xgb, y_train_xgb, y_val_xgb,
-            scaler_y)
+# Example usage:
+# X_train_tensor, X_test_tensor, y_train_tensor, y_test_tensor, scaler_y = preprocess_data(merged_df)
 
-# Usage
-X_train_tensor, X_val_tensor, y_train_tensor, y_val_tensor, X_train_xgb, X_val_xgb, y_train_xgb, y_val_xgb, scaler_y = data_preprocessing(merged_df)
 
