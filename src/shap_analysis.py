@@ -1,4 +1,7 @@
 import shap
+import numpy as np
+import torch
+import pandas as pd
 
 # Function to reshape 2D inputs back to 3D for the model
 def model_predict_3d(flattened_data):
@@ -43,3 +46,7 @@ shap_table = shap_table.round(3)
 
 # Print or use shap_table as needed
 print(shap_table)
+
+# Optionally, plot SHAP values for better visualization
+shap.summary_plot(shap_values, X_test_flat, feature_names=feature_names)
+
