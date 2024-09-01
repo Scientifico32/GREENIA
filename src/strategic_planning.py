@@ -3,48 +3,63 @@ import os
 import numpy as np
 import pandas as pd
 
-# Load saved SHAP values and feature names
-shap_table = pd.read_csv('....')
-best_individuals = np.load('....', allow_pickle=True)
 
-client = openai.Client(api_key="your-openai-api-key")
+# Placeholder for OpenAI client setup (replace with your API key)
+client = openai.Client(api_key="YOUR-KEY")
 
-strategic_recommendations = []
+# Aggregate information from all 30 days
+combined_optimized_features = []
 
-for day, best_individual in enumerate(best_individuals, start=1):
-    best_individual_truncated = best_individual[:len(shap_table['Features'])]
+for best_individual in best_individuals:
+    # Truncate or pad the best_individual to match the length of feature_names
+    if len(best_individual) < len(feature_names):
+        best_individual_truncated = np.pad(best_individual, (0, len(feature_names) - len(best_individual)), 'constant')
+    else:
+        best_individual_truncated = best_individual[:len(feature_names)]
 
-    optimized_features_summary = ', '.join(
-        [f"{shap_table['Features'][i]}: {best_individual_truncated[i]:.3f}" for i in range(len(shap_table['Features']))]
-    )
+    # Collect the combined optimized features for summary
+    combined_optimized_features.append(best_individual_truncated)
 
-    shap_summary = shap_table.head(10).to_string(index=False)
+# Average the combined optimized features over all 30 days
+avg_optimized_features = np.mean(combined_optimized_features, axis=0)
 
-    prompt_text = (
-        "Interpret the following SHAP values comprehensively for renewable energy production companies. "
-        "Explain how these values influence the prediction of the Deep Learning model and how these results help "
-        "optimize the placement of renewable energy sources, referring to geographical locations in Greece. "
-        "Consider the following top SHAP values:\n" + shap_summary + "\n\n"
-        "Additionally, consider the optimal set of features found through optimization, which suggests optimal "
-        "conditions for energy production: " + optimized_features_summary + ".\n\n"
-        "Provide a detailed and extensive explanation based on the above information, by combining all the information for each day in one weekly report that suggests where to place the different kind of RES in order to maximize the energy:"
-    )
+# Format the averaged features into a readable string
+optimized_features_summary = ', '.join(
+    [f"{feature_names[i]}: {avg_optimized_features[i]:.3f}" for i in range(len(feature_names))]
+)
 
-    completion = client.create_chat_completion(
-      model="gpt-3.5-turbo-instruct",
-      messages=[{"role": "user", "content": prompt_text}],
-      max_tokens=2000,
-      temperature=0
-    )
+# Prepare the SHAP summary from the SHAP table (top features across all days)
+shap_summary = shap_table.head(10).to_string(index=False)  # Display top 10 SHAP values for brevity
 
-    explanation = completion['choices'][0]['message']['content']
-    print(f"Explanation for Day {day}:\n", explanation, "\n")
-    strategic_recommendations.append(f"Day {day} - Strategic Insights:\n" + explanation + "\n")
+# Construct the prompt text in Greek (or your preferred language)
+prompt_text = (
+    "Based on the SHAP values and optimal features found through the optimization process over 30 days, "
+    "provide a comprehensive strategic plan for the placement of renewable energy sources (RES) across Greece. "
+    "The SHAP values represent the most influential factors affecting renewable energy production, and the optimal "
+    "features indicate the best conditions for maximizing energy output. Consider the following top SHAP values:\n" 
+    + shap_summary + "\n\n"
+    "Additionally, the average optimal conditions for energy production across all days are summarized as follows: " 
+    + optimized_features_summary + ".\n\n"
+    "Based on these insights, provide a detailed strategic plan for the optimal placement of different types of RES "
+    "across various geographical locations in Greece. The plan should focus on maximizing energy production efficiency "
+    "and sustainability."
+)
 
-strategic_plan = "\n".join(strategic_recommendations)
-save_dir = '...'
-strategic_plan_path = os.path.join(save_dir, 'strategic_plan.txt')
+# The request to OpenAI's API remains the same
+completion = client.completions.create(
+    model="gpt-3.5-turbo-instruct",
+    prompt=prompt_text,
+    max_tokens=2000,
+    temperature=0
+)
 
-with open(strategic_plan_path, 'w') as f:
-    f.write(strategic_plan)
-print("Strategic plan saved to:", strategic_plan_path)
+# Extract the strategic plan from the response
+strategic_plan = completion.choices[0].text
+
+# Save the strategic plan to a text file
+with open("strategic_plan.txt", "w") as text_file:
+    text_file.write("Strategic Planning for Renewable Energy Deployment in Greece:\n\n")
+    text_file.write(strategic_plan)
+
+# Optional: Print confirmation message
+print("Strategic plan has been saved to 'strategic_plan.txt'.")
