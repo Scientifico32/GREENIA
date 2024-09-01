@@ -9,13 +9,8 @@
 /project-directory/
   
   - /data/
-  │   ├── raw_data/
-  │   │   ├── AGCHIALOS_16665.xlsx
-  │   │   ├── AKTIO_16643.xlsx
-  │   │   ├── ALEXANDROUPOLI_16627.xlsx
-  │   │   └── ... (other Excel files)
   │   └── processed_data/
-  │       └── final_df_resampled_cleaned.csv
+  │       └── merged_df.csv
   │
   - /src/
   │   ├── data_preprocessing.py
