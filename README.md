@@ -63,7 +63,6 @@
 - analysis_notebook.ipynb: Jupyter notebook containing exploratory data analysis, model training steps, and visualization.
 
 📤 /outputs/
-training_log.csv: A log of the training process, including loss per epoch.
 strategic_plan.txt: The final strategic plan generated for optimal RES placement.
 
 🚀 Getting Started
