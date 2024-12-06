@@ -59,8 +59,6 @@
 - shap_explainer.pkl: Saved SHAP explainer object.
 - shap_values.pkl: Saved SHAP values for model interpretation.
 
-📓 /notebooks/
-- analysis_notebook.ipynb: Jupyter notebook containing exploratory data analysis, model training steps, and visualization.
 
 📤 /outputs/
 strategic_plan.txt: The final strategic plan generated for optimal RES placement.
